@@ -1,18 +1,37 @@
 from django.db import models
+from django.contrib.auth.models import User
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
-"""
-class Usuario(models.Model):
-    nombre = models.CharField(max_length=100)
-    rut = models.CharField(max_length=100)
-    mail = models.EmailField(max_length=100)
-    contrasena = models.CharField(max_length=100)
-    esAdmin = models.BooleanField()
-    habilitado = models.BooleanField()
+class Profile(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='profile',
+    )
+
+    rut = models.CharField(max_length=15, null=True, blank=True, unique=True)
+    mail = models.CharField(max_length=200, blank=True)
+    isAdmin = models.BooleanField(default=False)
+    hab = models.BooleanField(default = 1)
+
+
+    bio = models.TextField(max_length=500, blank=True)
+    location = models.CharField(max_length=30, blank=True)
+    birth_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
-        return self.nombre
+        return self.rut
 
-"""
+    @receiver(post_save, sender=User)
+    def create_user_profile(sender, instance, created, **kwargs):
+        if created:
+            Profile.objects.create(user=instance)
+
+    @receiver(post_save, sender=User)
+    def save_user_profile(sender, instance, **kwargs):
+        instance.profile.save()
+
 
 class Espacio(models.Model):
     nombre = models.CharField(max_length=100)
@@ -24,7 +43,7 @@ class Espacio(models.Model):
     def __str__(self):
         return self.nombre
 
-class Reservas(models.Model):
+class Reserva(models.Model):
     rut = models.CharField(max_length=100)
     fh_reserva = models.DateTimeField()
     fh_ini_reserva = models.DateTimeField()
@@ -46,7 +65,7 @@ class Articulo(models.Model):
     def __str__(self):
         return self.nombre
 
-class Prestamos(models.Model):
+class Prestamo(models.Model):
     rut = models.CharField(max_length=100)
     fh_ini_prestamo = models.DateTimeField()
     fh_fin_prestamo = models.DateTimeField()
